@@ -1,0 +1,262 @@
+<!-- Today's Stats -->
+            <div class="widget">
+                <div class="widget-title">
+                    <span>📈</span>
+                    Today's Stats
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-label">Analyses</span>
+                        <span class="stat-value" id="statAnalyses">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Avg Calories</span>
+                        <span class="stat-value" id="statCalories">--</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Health Score</span>
+                        <span class="stat-value" id="statHealth">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent History -->
+            <div class="widget">
+                <div class="widget-title">
+                    <span>🕐</span>
+                    Recent Analyses
+                </div>
+                <div id="recentHistory">
+                    <div class="empty-state">
+                        <p style="font-size: 0.875rem;">No recent activity</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tips Widget -->
+            <div class="widget" style="background: linear-gradient(135deg, #f0f4ff, #e0e7ff);">
+                <div class="widget-title">
+                    <span>💡</span>
+                    Health Tip
+                </div>
+                <p id="healthTip" style="font-size: 0.875rem; color: #4b5563; line-height: 1.6;">
+                    Track your meals regularly to maintain awareness of your nutrition patterns!
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal" id="settingsModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>⚙️ Settings</h3>
+            <button class="modal-close" onclick="closeSettings()">✕</button>
+        </div>
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">API Key</label>
+            <div class="api-input-group">
+                <input type="password" id="settingsApiKey" placeholder="sk-ant-api03-...">
+                <button class="btn btn-primary" onclick="updateApiKey()">Update</button>
+            </div>
+        </div>
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: 600;">Dark Mode</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="darkModeToggle">
+                    <span class="toggle-slider"></span>
+                </label>
+            </label>
+        </div>
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: 600;">Show Nutrition Cards</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="nutritionCardsToggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </label>
+        </div>
+        <button class="btn btn-danger" style="width: 100%;" onclick="resetApp()">
+            🔄 Reset All Data
+        </button>
+    </div>
+</div>
+
+<script>
+    // ===== STATE MANAGEMENT =====
+    let apiKey = '';
+    let selectedFile = null;
+    let history = [];
+    let currentAnalysis = null;
+
+    // ===== INITIALIZATION =====
+    window.onload = function() {
+        loadApiKey();
+        loadHistory();
+        setupEventListeners();
+        updateStats();
+        rotateHealthTips();
+    };
+
+    // ===== EVENT LISTENERS =====
+    function setupEventListeners() {
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+
+        uploadZone.addEventListener('click', (e) => {
+            if (e.target.closest('.icon-btn')) return;
+            if (!document.getElementById('previewContainer').style.display || 
+                document.getElementById('previewContainer').style.display === 'none') {
+                fileInput.click();
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files[0]) handleFile(e.target.files[0]);
+        });
+
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('drag-over');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('drag-over');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                handleFile(file);
+            }
+        });
+    }
+
+    // ===== API KEY MANAGEMENT =====
+    function saveApiKey() {
+        const input = document.getElementById('apiKeyInput');
+        const key = input.value.trim();
+        
+        if (!key) {
+            showNotification('Please enter an API key', 'error');
+            return;
+        }
+
+        if (!key.startsWith('sk-ant-')) {
+            showNotification('Invalid API key format', 'error');
+            return;
+        }
+
+        apiKey = key;
+        localStorage.setItem('claude_api_key', key);
+        
+        showNotification('API key saved successfully!', 'success');
+        
+        setTimeout(() => {
+            document.getElementById('setupBanner').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'grid';
+        }, 1000);
+    }
+
+    function loadApiKey() {
+        const stored = localStorage.getItem('claude_api_key');
+        if (stored) {
+            apiKey = stored;
+            document.getElementById('setupBanner').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'grid';
+        }
+    }
+
+    function updateApiKey() {
+        const input = document.getElementById('settingsApiKey');
+        const key = input.value.trim();
+        
+        if (!key.startsWith('sk-ant-')) {
+            showNotification('Invalid API key format', 'error');
+            return;
+        }
+
+        apiKey = key;
+        localStorage.setItem('claude_api_key', key);
+        showNotification('API key updated!', 'success');
+        closeSettings();
+    }
+
+    // ===== FILE HANDLING =====
+    function handleFile(file) {
+        if (!file.type.startsWith('image/')) {
+            showNotification('Please upload an image file', 'error');
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            showNotification('Image too large. Max 5MB', 'error');
+            return;
+        }
+
+        selectedFile = file;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            document.getElementById('previewImage').src = e.target.result;
+            document.getElementById('uploadContent').style.display = 'none';
+            document.getElementById('previewContainer').style.display = 'block';
+            document.getElementById('analyzeBtn').disabled = false;
+            document.getElementById('statusBadge').textContent = 'Image Loaded';
+            document.getElementById('statusBadge').className = 'badge badge-success';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function removeImage() {
+        selectedFile = null;
+        document.getElementById('fileInput').value = '';
+        document.getElementById('uploadContent').style.display = 'block';
+        document.getElementById('previewContainer').style.display = 'none';
+        document.getElementById('analyzeBtn').disabled = true;
+        document.getElementById('statusBadge').textContent = 'Ready';
+    }
+
+    function fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result.split(',')[1]);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function getMediaType(filename) {
+        const ext = filename.split('.').pop().toLowerCase();
+        const types = {
+            'jpg': 'image/jpeg',
+            'jpeg': 'image/jpeg',
+            'png': 'image/png',
+            'gif': 'image/gif',
+            'webp': 'image/webp'
+        };
+        return types[ext] || 'image/jpeg';
+    }
+
+    // ===== ANALYSIS =====
+    async function analyzeImage() {
+        if (!selectedFile) return;
+
+        document.getElementById('uploadZone').style.display = 'none';
+        document.getElementById('analyzeBtn').style.display = 'none';
+        document.getElementById('loadingContainer').style.display = 'block';
+        document.getElementById('statusBadge').textContent = 'Analyzing...';
+        document.getElementById('statusBadge').className = 'badge badge-warning';
+
+        simulateProgress();
+
+        try {
+            const base64Image = await fileToBase64(selectedFile);
+            const mediaType = getMediaType(selectedFile.name);
+
+            const prompt = `Analyze this food image and provide a comprehensive nutrition breakdown.

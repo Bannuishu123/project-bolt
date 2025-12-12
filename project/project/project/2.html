@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriVision AI - Advanced Food Analyzer</title>
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #1f2937;
+            --light: #f9fafb;
+            --border: #e5e7eb;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            min-height: 100vh;
+            color: var(--dark);
+        }
+
+        /* Navigation */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-menu a {
+            color: var(--dark);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            cursor: pointer;
+        }
+
+        .nav-menu a:hover {
+            color: var(--primary);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        /* Grid Layout */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* API Key Setup */
+        .setup-banner {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border: 2px solid var(--warning);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            animation: slideDown 0.5s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .api-input-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .api-input-group input {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid var(--warning);
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .api-input-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.875rem 1.5rem;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Upload Area */
+        .upload-zone {
+            border: 3px dashed var(--primary);
+            border-radius: 15px;
+            padding: 3rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: linear-gradient(135deg, #f0f4ff, #e0e7ff);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-zone::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+            transition: left 0.5s;
+        }
+
+        .upload-zone:hover::before {
+            left: 100%;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--secondary);
+            background: linear-gradient(135deg, #e0e7ff, #ddd6fe);
+            transform: scale(1.02);
+        }
+
+        .upload-zone.drag-over {
+            border-color: var(--success);
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            transform: scale(1.05);
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .preview-container {
+            position: relative;
+            display: none;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 500px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            object-fit: contain;
+        }
+
+        .preview-overlay {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .icon-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* Loading */
+        .loading-container {
+            display: none;
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .loading-spinner {
+            width: 80px;
+            height: 80px;
+            border: 6px solid var(--border);
+            border-top: 6px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 1.1rem;
+            color: var(--dark);
+            margin-top: 1rem;
+        }
+
+        .loading-tips {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: var(--light);
+            border-radius: 10px;
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+
+        /* Results */
+        .results-container {
+            display: none;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .nutrition-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .nutrition-card {
+            background: linear-gradient(135deg, #f0f4ff, #e0e7ff);
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .nutrition-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .nutrition-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 0.5rem 0;
+        }
+
+        .nutrition-label {
+            color: #6b7280;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .analysis-content {
+            background: var(--light);
+            padding: 2rem;
+            border-radius: 15px;
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .tab {
+            padding: 1rem 2rem;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: #6b7280;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Sidebar Widgets */
+        .widget {
+            background: white;
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .widget-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stats-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem;
+            background: var(--light);
+            border-radius: 10px;
+        }
+
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        /* History */
+        .history-item {
+            background: var(--light);
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 4px solid var(--primary);
+        }
+
+        .history-item:hover {
+            background: #e0e7ff;
+            transform: translateX(5px);
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .history-time {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        .history-preview {
+            font-size: 0.875rem;
+            color: #4b5563;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .quick-action {
+            background: linear-gradient(135deg, #f0f4ff, #e0e7ff);
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .quick-action:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .quick-action-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .quick-action-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.active {
+            display: flex;
+            animation: fadeIn 0.3s;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b7280;
+        }
+
+        /* Chat Interface */
+        .chat-container {
+            background: var(--light);
+            border-radius: 15px;
+            padding: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+        }
+
+        .chat-message {
+            padding: 1rem;
+            border-radius: 15px;
+            margin-bottom: 1rem;
+            max-width: 80%;
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .chat-message.user {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            margin-left: auto;
+        }
+
+        .chat-message.ai {
+            background: white;
+            border: 1px solid var(--border);
+        }
+
+        .chat-input-group {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .chat-input-group input {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 1rem;
+        }
+
+        .chat-input-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transition: width 0.3s;
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-menu {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+
+            .nutrition-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+        }
+
+        /* Tooltip */
+        [data-tooltip] {
+            position: relative;
+            cursor: help;
+        }
+
+        [data-tooltip]::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.5rem 1rem;
+            background: var(--dark);
+            color: white;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            margin-bottom: 5px;
+        }
+
+        [data-tooltip]:hover::after {
+            opacity: 1;
+        }
+
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #ccc;
+            transition: 0.4s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background: var(--primary);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #9ca3af;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span>🍎</span>
+            <span>NutriVision AI</span>
+        </div>
+        <ul class="nav-menu">
+            <li><a onclick="showTab('analyze')">Analyze</a></li>
+            <li><a onclick="showTab('history')">History</a></li>
+            <li><a onclick="showTab('chat')">AI Chat</a></li>
+            <li><a onclick="openSettings()">Settings</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <!-- API Setup Banner -->
+        <div class="setup-banner" id="setupBanner">
+            <h3 style="margin-bottom: 0.5rem;">🔑 API Key Required</h3>
+            <p style="color: #92400e; margin-bottom: 1rem;">Get your free API key from <a href="https://console.anthropic.com" target="_blank" style="color: #667eea; font-weight: bold;">console.anthropic.com</a></p>
+            <div class="api-input-group">
+                <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-...">
+                <button class="btn btn-primary" onclick="saveApiKey()">
+                    💾 Save Key
+                </button>
+            </div>
+            <div id="apiStatus" style="margin-top: 1rem; display: none;"></div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="main-grid" id="mainContent" style="display: none;">
+            <!-- Main Content Area -->
+            <div>
+                <!-- Tab: Analyze -->
+                <div id="tabAnalyze" class="tab-content active">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <span>📸</span>
+                                Food Analysis
+                            </h2>
+                            <div>
+                                <span class="badge badge-success" id="statusBadge">Ready</span>
+                            </div>
+                        </div>
+
+                        <!-- Upload Zone -->
+                        <div id="uploadZone" class="upload-zone">
+                            <div id="uploadContent">
+                                <div class="upload-icon">🍽️</div>
+                                <h3 style="margin-bottom: 0.5rem;">Drop your food image here</h3>
+                                <p style="color: #6b7280; margin-bottom: 1rem;">or click to browse</p>
+                                <p style="font-size: 0.875rem; color: #9ca3af;">Supports: PNG, JPG, GIF, WebP (Max 5MB)</p>
+                                <input type="file" id="fileInput" accept="image/*" hidden>
+                            </div>
+                            <div id="previewContainer" class="preview-container">
+                                <img id="previewImage" class="preview-image" alt="Preview">
+                                <div class="preview-overlay">
+                                    <button class="icon-btn" style="background: var(--danger); color: white;" onclick="removeImage()" data-tooltip="Remove">
+                                        ✕
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Analyze Button -->
+                        <button class="btn btn-primary" id="analyzeBtn" onclick="analyzeImage()" disabled style="width: 100%; margin-top: 1.5rem; font-size: 1.1rem; padding: 1.25rem;">
+                            <span>🔍</span>
+                            Analyze Nutrition
+                        </button>
+
+                        <!-- Loading -->
+                        <div id="loadingContainer" class="loading-container">
+                            <div class="loading-spinner"></div>
+                            <p class="loading-text">Analyzing your food with AI...</p>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressBar" style="width: 0%"></div>
+                            </div>
+                            <div class="loading-tips">
+                                <p><strong>💡 Did you know?</strong></p>
+                                <p id="loadingTip">AI is analyzing colors, textures, and portions to estimate nutrition.</p>
+                            </div>
+                        </div>
+
+                        <!-- Results -->
+                        <div id="resultsContainer" class="results-container">
+                            <div class="results-header">
+                                <h3 style="font-size: 1.5rem;">📊 Analysis Results</h3>
+                                <button class="btn btn-secondary" onclick="analyzeAnother()">
+                                    ➕ New Analysis
+                                </button>
+                            </div>
+
+                            <!-- Nutrition Cards -->
+                            <div class="nutrition-grid" id="nutritionCards"></div>
+
+                            <!-- Full Analysis -->
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <span>📝</span>
+                                    Detailed Analysis
+                                </h3>
+                                <button class="btn btn-secondary" onclick="exportResults()">
+                                    📥 Export
+                                </button>
+                            </div>
+                            <div class="analysis-content" id="analysisContent"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: History -->
+                <div id="tabHistory" class="tab-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <span>📚</span>
+                                Analysis History
+                            </h2>
+                            <button class="btn btn-danger" onclick="clearHistory()">
+                                🗑️ Clear All
+                            </button>
+                        </div>
+                        <div id="historyList">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📭</div>
+                                <p>No analyses yet. Start by uploading a food image!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Chat -->
+                <div id="tabChat" class="tab-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <span>💬</span>
+                                AI Nutrition Assistant
+                            </h2>
+                        </div>
+                        <div class="chat-container" id="chatContainer">
+                            <div class="chat-message ai">
+                                👋 Hi! I'm your AI nutrition assistant. Ask me anything about healthy eating, meal planning, or nutrition advice!
+                            </div>
+                        </div>
+                        <div class="chat-input-group">
+                            <input type="text" id="chatInput" placeholder="Ask about nutrition, diet tips, meal ideas..." onkeypress="if(event.key==='Enter') sendChat()">
+                            <button class="btn btn-primary" onclick="sendChat()">
+                                <span>📤</span>
+                                Send
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div>
+                <!-- Quick Actions -->
+                <div class="widget">
+                    <div class="widget-title">
+                        <span>⚡</span>
+                        Quick Actions
+                    </div>
+                    <div class="quick-actions">
+                        <div class="quick-action" onclick="showTab('analyze')">
+                            <div class="quick-action-icon">📸</div>
+                            <div class="quick-action-label">New Scan</div>
+                        </div>
+                        <div class="quick-action" onclick="showTab('chat')">
+                            <div class="quick-action-icon">💬</div>
+                            <div class="quick-action-label">Ask AI</div>
+                        </div>
+                        <div class="quick-action" onclick="generateReport()">
+                            <div class="quick-action-icon">📊</div>
+                            <div class="quick-action-label">Weekly Report</div>
+                        </div>
+                        <div class="quick-action" onclick="getMealSu
